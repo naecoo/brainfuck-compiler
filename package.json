@@ -14,5 +14,14 @@
   },
   "bin": {
     "brainfuck-compile": "bin/compile.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "index.d.ts",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "esbuild": "^0.14.2"
   }
 }
