@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const { compiler } = require('../dist/bundle');
 const path = require('path')
 const fs = require('fs');
