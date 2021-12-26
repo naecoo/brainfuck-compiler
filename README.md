@@ -1,8 +1,8 @@
 # brainfuck-compiler
 A tiny brainfuck programming language compiler
 
-## wip
-
+## Usage
+todo...
 
 ## Reference
 - [the-super-tiny-compiler](https://github.com/jamiebuilds/the-super-tiny-compiler)
