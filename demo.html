@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #app {
+      padding: 24px 16px;
+    }
+
+    #step {
+      width: 100px;
+    }
+
+    .btns {
+      margin-top: 4px;
+    }
+
+    .main {
+      margin-top: 24px;
+      position: relative;
+      overflow-x: auto;
+    }
+
+    .tape {
+      display: flex;
+      flex-flow: row nowrap;
+      margin-top: 8px;
+      padding: 0;
+      padding-bottom: 2px;
+    }
+
+    .cell {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      min-height: 32px;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border-top: 1px solid #333;
+      border-bottom: 1px solid #333;
+    }
+
+    .cell:first-of-type {
+      border-left: 1px solid #333;
+    }
+
+    .cell:last-of-type {
+      border-right: 1px solid #333;
+    }
+
+    .cell:not(:last-of-type) {
+      border-right: 1px solid #333;
+    }
+
+    .pointer {
+      position: absolute;
+      left: 10px;
+      top: 94px;
+      border: 5px solid transparent;
+      border-bottom: 7px solid red;
+      z-index: 1;
+    }
+
+    .output {
+      height: 22px;
+      margin-top: 12px;
+      background: darkblue;
+      color: #fff;
+      text-indent: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <aside class="aside">
+      <label for="input">BrainFuck source code:</label><br/>
+      <textarea name="input" id="input" cols="70" rows="10">
++++++++[>++++++++++<-]>++.
+<+++[>++++++++++<-]>-.
++++++++..
++++.
+>+++[>++++++++++<-]>++.
+<<<+++[>--------<-]>.
+<+++[>++++++++<-]>.
++++.
+------.
+--------.
+>>+.
+      </textarea>
+      <br/><label for="step">perform interval: </label>
+      <input type="number" id="step" value="0" />
+      <div class="btns">
+        <button id="play" class="btn">play</button>
+        <button id="pause" class="btn">pause</button>
+        <button id="stop" class="btn">stop</button>
+      </div>
+    </aside>
+    <main class="main">
+      <h3>tape</h3>
+      <ul class="tape"></ul>
+      <div class="pointer"></div>
+    </main>
+    <h3>output</h3>
+    <footer id="output" class="output">
+    </footer>
+  </div>
+</body>
+
+<script defer type="module">
+  const presets = `
+  function getValue() {
+    return stape[spointer];
+  }
+  function increment() {
+    stape[spointer]++;
+
+    stack.push(() => {
+      tape[pointer]++;
+      updateCell();
+    });
+  }
+  function decrease() {
+    stape[spointer]--;
+
+    stack.push(() => {
+      tape[pointer]--;
+      updateCell();
+    });
+  }
+  function movePrev() {
+    spointer--;
+
+    stack.push(() => {
+      pointer--;
+      movePointer();
+    });
+  }
+  function moveNext() {
+    spointer++;
+
+    stack.push(() => {
+      pointer++;
+      movePointer();
+    });
+  }
+  function output() {
+    stack.push(() => {
+      outputText();
+    });
+  }
+  function input() {
+    var c = prompt('Input one Ascii character');
+    const a = c[0].charCodeAt();
+    stape[spointer] = a;
+
+    stack.push(() => {
+      tape[pointer] = a
+    });
+  }
+  `;
+
+  import { compiler } from './src/index.js';
+  const inputEl = document.querySelector('#input');
+  const outputEL = document.querySelector('#output');
+  const tapeEl = document.querySelector('.tape');
+  const pointerEl = document.querySelector('.pointer');
+  const playEl =  document.querySelector('#play');
+  const stopEl = document.querySelector('#stop');
+  const pauseEl = document.querySelector('#pause');
+  const stepEl = document.querySelector('#step');
+
+  let tape, pointer, stack;
+  let stape, spointer;
+  let running = false;
+  let paused = false;
+
+  const init = () =>  {
+    tapeEl.innerHTML = '';
+    outputEL.innerHTML = '';
+    paused = running = false;
+    tape = new Array(500).fill(0);
+    pointer = 0;
+    stape = [...tape];
+    spointer = 0;
+    stack = [];
+    
+    const fragement = document.createDocumentFragment();
+    tape.forEach((cell) => {
+      const cellEl = document.createElement('li');
+      cellEl.innerText = cell;
+      cellEl.classList.add('cell');
+      fragement.appendChild(cellEl);
+    });
+
+    tapeEl.append(fragement);
+    movePointer();
+  }
+
+  const movePointer = () => {
+    const cellEl = tapeEl.children[pointer];
+    const x = cellEl.offsetLeft;
+    pointerEl.style.transform = `translateX(${x}px)`;
+    cellEl.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+  };
+  
+  const updateCell = () => {
+    const cellEl = tapeEl.children[pointer];
+    cellEl.innerText = tape[pointer]
+  }
+  
+  const outputText = () => {
+    outputEL.innerHTML = `${outputEL.innerHTML}${String.fromCharCode(tape[pointer])}`
+  }
+
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const perform = () => {
+    let step = parseInt(stepEl.value);
+    if (step < 0 || isNaN(step)) {
+      step = 0;
+    }
+
+    const next = async () => {
+      if (paused || !running) return;
+
+      if (!stack.length) {
+        running = false;
+        paused = false;
+        return;
+      }
+
+      try {
+        stack.shift()();
+        await sleep(step);
+        next();
+      } catch (e) {
+        alert('Please input valid code!');
+        console.error(e);
+        running = false;
+        paused = false;
+      }
+
+    };
+
+    next();
+  }
+
+  playEl.addEventListener('click', () => {
+    if (paused) {
+      paused = false;
+      perform();
+    };
+
+    if (running) return;
+
+    // init
+    init();
+
+    // compiler
+    const code = compiler(input.value, presets).code;
+
+    // run in windows context
+    eval(code)();
+    
+    // clear stack
+    running = true;
+    perform();
+  });
+  
+  
+  stopEl.addEventListener('click', () => {
+    if (!running) return;
+    running = false;
+    paused = false;
+  });
+
+  pauseEl.addEventListener('click', () => {
+    if (!running || paused) return;
+    paused = true;
+  });
+
+
+  init();
+</script>
+
+</html>
