@@ -14,7 +14,7 @@
     "prepublish": "npm run build && npm run test"
   },
   "bin": {
-    "bf-compiler": "bin/compile.js"
+    "bf-compile": "bin/compile.js"
   },
   "files": [
     "dist",
