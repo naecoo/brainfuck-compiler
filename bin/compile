@@ -1,0 +1,93 @@
+#!/usr/bin/env node
+
+const { compiler } = require('../dist/bundle');
+const pkg = require('../package.json');
+const path = require('path')
+const fs = require('fs');
+
+const printHelp = (status) => {
+  const print = status === 0 ? console.log : console.error;
+  const binName = Object.keys(pkg.bin)[0];
+  print('Usage: ' + binName + ' [-h, --help] [-v, --version]');
+  print(
+    '       ' +
+    binName +
+    ' [-i, --indent INPUT FILE] [-s, --source SOURCE CODE STRING] [-o, --output OUTPUT FILE]',
+  );
+  process.exit(status);
+};
+
+const printVersion = () => {
+  console.log(pkg.version);
+  process.exit(0);
+};
+
+const run = () => {
+  const argv = process.argv.slice(2);
+  const options = {
+    input: '',
+    output: '',
+    source: ''
+  };
+
+  for (let i = 0; i < argv.length; ++i) {
+    const arg = argv[i];
+    switch (arg) {
+      case '-h':
+      case '--help':
+        printHelp(0);
+        break;
+
+      case '-i':
+      case '--input':
+        options.input = argv[++i];
+        break;
+
+      case '-s':
+      case '--source':
+        options.source = argv[++i];
+        break;
+
+      case '-o':
+      case '--output':
+        options.output = argv[++i];
+        break;
+
+      case '-v':
+      case '--version':
+        printVersion();
+        break;
+
+      default:
+        console.error('Option "' + arg + '" not supported.');
+        printHelp(1);
+        break;
+    }
+  }
+
+
+  try {
+    const { source, input, output } = options;
+
+    let sourceCode = '';
+    if (source) {
+      sourceCode = source;
+    } else if (input) {
+      sourceCode = fs.readFileSync(path.resolve(input), 'utf8');
+    } else {
+      throw new Error('missing input or source');
+    }
+
+    if (!output) {
+      throw new Error('missing output');
+    }
+
+    const { code } = compiler(sourceCode);
+    fs.writeFileSync(path.resolve(output), code, 'utf8');
+  } catch (error) {
+    console.error('Error: ' + error.message);
+    process.exit(1);
+  }
+}
+
+run();

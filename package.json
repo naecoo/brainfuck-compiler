@@ -7,14 +7,18 @@
   "repository": "https://github.com/naecoo/brainfuck-compiler.git",
   "author": "naecoo <ocean7hy@gmail.com>",
   "license": "MIT",
+  "exports": {
+    "import": "./dist/bundle.esm.js.mjs",
+    "require": "./dist/bundle.js"
+  },
+  "bin": {
+    "bf-compile": "bin/compile"
+  },
   "scripts": {
     "dev": "npm run build && node dist/bundle.js",
     "build": "node build.js",
     "test": "tsc index.d.ts test/type.ts --noEmit && node test/index.js",
     "prepublish": "npm run build && npm run test"
-  },
-  "bin": {
-    "bf-compile": "bin/compile.js"
   },
   "files": [
     "dist",
