@@ -1,6 +1,6 @@
 # brainfuck-compiler
 
-**Compile** [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) to Javascript
+**Compiler** [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) to Javascript
 
 
 [demo](https://naecoo.github.io/brainfuck-compiler/index.html)
@@ -16,7 +16,7 @@ bf-compile -i source.txt -o result.js
 
 // or pass source code directly
 br-compile -s '++--..><[]' -o result.js
-```
+```r
 
 ## Javascript API
 ```javascript
