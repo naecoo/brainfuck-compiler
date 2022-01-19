@@ -11,12 +11,14 @@ npm install bf-compiler
 ```
 
 ## Command line
-```
+
+```bash
 bf-compile -i source.txt -o result.js
 
 // or pass source code directly
 br-compile -s '++--..><[]' -o result.js
-```r
+```
+
 
 ## Javascript API
 ```javascript
@@ -34,7 +36,6 @@ result.tokens;
 result.ast;
 // Javascript ast
 result.javascriptAst;
-
 ```
 
 ## Reference
